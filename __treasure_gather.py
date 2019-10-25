@@ -11,6 +11,7 @@ current_room = 999
 previous_room = 999
 cooldown = 15
 available_space = 0
+terrain = "NORMAL"
 
 traversalPath = []
 path = []
@@ -21,6 +22,7 @@ r = requests.get(url=api + "/init", headers = {"Authorization": "Token"})
 
 data = r.json()
 cooldown = data["cooldown"]
+terrain = data["terrain"]
 
 
 current_room = data["room_id"]
@@ -29,7 +31,7 @@ print("\nCurrent room:", current_room)
 
 def go(direction):
 
-    print(f"\n=====>>>>> Go: {direction}")
+    print(f"\n==========>>>>>  Go: {direction}")
 
     direction_inverse = {"s": "n", "n": "s", "w": "e", "e": "w"}
     prev_direction = direction_inverse[direction]
@@ -38,7 +40,8 @@ def go(direction):
     global previous_room
     global cooldown
     global data
-    global available_space    
+    global available_space
+    global terrain    
 
     previous_room = current_room
 
@@ -48,67 +51,104 @@ def go(direction):
 
     time.sleep(cooldown)
 
-    r = requests.post(url=api + "/move", json=post_data, headers = {"Authorization": "Token"})
+    if terrain == "MOUNTAIN":
+        r = requests.post(url=api + "/fly", json=post_data, headers = {"Authorization": "Token"})
+        print("Now we're flying!")
+    else:
+        r = requests.post(url=api + "/move", json=post_data, headers = {"Authorization": "Token"})
 
     data = r.json()
     cooldown = data["cooldown"]
+    terrain = data["terrain"]
 
     current_room = data["room_id"]
 
-    print("Current room:", current_room)
+    print(data["messages"])
+    print(f"\nCurrent room: {current_room} - {data['title']}")
+    print(data["description"])
+    print(f"Terrain: {terrain}")
 
-    # if len(data["items"]) > 0:
-    #     print(f"There is a {data['items']} here!")
+    if len(data["items"]) > 0:
+        print(f"\nThere is {data['items']} here!")
 
-    #     time.sleep(cooldown)
+        for i in data["items"]:
 
-    #     r = requests.post(url=api + "/status", headers = {"Authorization": "Token"})
+            time.sleep(cooldown)
 
-    #     status = r.json()
-    #     cooldown = status["cooldown"]
+            r = requests.post(url=api + "/status", headers = {"Authorization": "Token"})
 
-    #     available_space = status["strength"] - status["encumbrance"]
-    #     print("Available space:", available_space)
+            status = r.json()
+            cooldown = status["cooldown"]
 
-    #     time.sleep(cooldown)
+            available_space = status["strength"] - status["encumbrance"]
+            print("Available space:", available_space)
 
-    #     r = requests.post(url=api + "/examine", json={"name": f"{data['items'][0]}"}, headers = {"Authorization": "Token"})
+            time.sleep(cooldown)
 
-    #     item_stats = r.json()
-    #     cooldown = item_stats["cooldown"]
+            r = requests.post(url=api + "/examine", json={"name": f"{i}"}, headers = {"Authorization": "Token"})
 
-    #     if item_stats["weight"] <= available_space:
-    #         print("There's room to carry this treasure")
+            item_stats = r.json()
+            cooldown = item_stats["cooldown"]
 
-    #         time.sleep(cooldown)
+            if item_stats["weight"] <= available_space:
+                print("There's room to carry this treasure")
 
-    #         r = requests.post(url=api + "/take", json={"name": f"{data['items'][0]}"}, headers = {"Authorization": "Token"})
+                time.sleep(cooldown)
 
-    #         pickup = r.json()
-    #         cooldown = pickup["cooldown"]
+                r = requests.post(url=api + "/take", json={"name": f"{i}"}, headers = {"Authorization": "Token"})
 
-    #         print(pickup["messages"])
+                pickup = r.json()
+                cooldown = pickup["cooldown"]
 
-    #     if item_stats["weight"] > available_space:
-    #         print("No more room to carry treasures :(\nHead back to shop and sell off what you have!")
+                print(pickup["messages"])
 
-    # if len(data["items"]) is 0:
-    #     print("No treasure in this room :(")    
+            if item_stats["weight"] > available_space:
+                print("No more room to carry treasures :(\nHead back to shop and sell off what you have!")
 
-    print(f"Cooldown: {cooldown}\n")
+    if len(data["items"]) is 0:
+        print("No treasure in this room :(")    
 
-
-
-
+    print(f"\nWait {cooldown} seconds before next move!\n")
 
 
 
-go("w")
-go("w")
+# go("e")
+
+# go("n")
+# go("n")
+# go("n")
+# go("n")
+# go("n")
+
+# go("w")
+
+# go("n")
+
+# go("w")
+
+# go("n")
+
+# go("w")
+# go("w")
+# go("w")
+# go("w")
+# go("w")
+# go("w")
+# go("w")
+
+#####         #########
+
+go("e")
+go("e")
+go("e")
+go("e")
+go("e")
+go("e")
+go("e")
 
 go("s")
 
-go("w")
+go("e")
 
 go("s")
 
@@ -118,16 +158,6 @@ go("s")
 go("s")
 go("s")
 go("s")
+go("s")
 
 go("w")
-go("w")
-go("w")
-go("w")
-go("w")
-go("w")
-
-go("s")
-go("s")
-go("s")
-go("s")
-go("s")
